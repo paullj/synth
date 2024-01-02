@@ -16,10 +16,7 @@ cpal = "0.15.2"
 anyhow = "1.0.44"
 
 [dev-dependencies]
-assert_no_alloc = "1.1.2"
-funutd = "0.12.1"
-eframe = "0.24.1"
-fundsp = "0.16.0"
+
 
 # Dependencies for Raspberry Pi target
 [target.'cfg(target = "armv7-unknown-linux-gnueabihf")'.dependencies]

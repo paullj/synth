@@ -142,7 +142,6 @@ impl State for Synth {
     }
 
     fn exit(&mut self) {
-        self.state_machine.stop();
     }
 }
 
