@@ -1,0 +1,29 @@
+[package]
+name = "toy-synth"
+version = "0.1.0"
+authors = ["Paul Lavender-Jones <paul@lavender-jones.com>"]
+license = "MIT"
+edition = "2021"
+publish = false
+
+
+[dependencies]
+embedded-graphics = "0.8.1"
+embedded-layout = "0.4.1"
+sfsm = { version = "0.4.3", features = ["trace"] }
+dasp = { version = "0.11.0", features = ["all"] }
+cpal = "0.15.2"
+anyhow = "1.0.44"
+
+[dev-dependencies]
+assert_no_alloc = "1.1.2"
+funutd = "0.12.1"
+eframe = "0.24.1"
+fundsp = "0.16.0"
+
+# Dependencies for Raspberry Pi target
+[target.'cfg(target = "armv7-unknown-linux-gnueabihf")'.dependencies]
+
+# Dependencies for other targets
+[target.'cfg(not(target = "armv7-unknown-linux-gnueabihf"))'.dependencies]
+embedded-graphics-simulator = "0.6.0"
