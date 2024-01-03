@@ -1,5 +1,5 @@
 [package]
-name = "toy-synth"
+name = "synth-app"
 version = "0.1.0"
 authors = ["Paul Lavender-Jones <paul@lavender-jones.com>"]
 license = "MIT"

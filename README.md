@@ -34,6 +34,9 @@ flowchart LR
 > **Note**: Components marked with * have not been bought or implemented yet.
 
 
-* `firmware`: Firmware for a Raspberry Pi Pico that sends MIDI messages over USB
+* [`synth-firmware`](https://github.com/paullj/toy-synth/blob/main/packages/firmware/README.md): Firmware for a Raspberry Pi Pico that sends MIDI messages over USB
 <!-- TODO: Rename app to something more descriptive -->
-* `app`: Application that runs on a Raspberry Pi Zero W 2 that receives MIDI messages over USB and generates sounds
+* `synth-app`: Application that runs on a Raspberry Pi Zero W 2 that receives MIDI messages over USB and generates sounds
+
+## Development
+This project uses [just](https://github.com/casey/just) as a task runner. Once installed run `just` in the repo root to see the available tasks. You will also need to install [Rust](https://www.rust-lang.org/tools/install) and a few other dependencies, you can run `just check-setup` to check if you have everything installed.
