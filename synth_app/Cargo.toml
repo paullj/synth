@@ -14,6 +14,7 @@ sfsm = { version = "0.4.3", features = ["trace"] }
 dasp = { version = "0.11.0", features = ["all"] }
 cpal = "0.15.2"
 anyhow = "1.0.44"
+crossbeam-channel = "0.5.10"
 
 [dev-dependencies]
 

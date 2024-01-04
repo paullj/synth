@@ -256,6 +256,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-channel"
+version = "0.5.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82a9b73a36529d9c47029b9fb3a6f0ea3cc916a261195352ba19e770fc1748b2"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1165,6 +1175,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cpal",
+ "crossbeam-channel",
  "dasp",
  "embedded-graphics",
  "embedded-graphics-simulator",
