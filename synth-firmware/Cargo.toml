@@ -11,18 +11,44 @@ defmt-rtt = "0.4.0"
 
 [dependencies.embassy-executor]
 git = "https://github.com/embassy-rs/embassy.git"
-rev = "c3ef98a"
-features = ["nightly", "arch-cortex-m", "executor-thread", "integrated-timers"]
+rev = "591c404"
+features =["nightly", "arch-cortex-m", "executor-thread", "executor-interrupt", "defmt", "integrated-timers"]
+
+[dependencies.embassy-futures]
+git = "https://github.com/embassy-rs/embassy.git"
+rev = "591c404"
+features = ["defmt"]
+
 
 [dependencies.embassy-rp]
 git = "https://github.com/embassy-rs/embassy.git"
-rev = "c3ef98a"
-features = ["critical-section-impl", "time-driver"]
+rev = "591c404"
+features = ["defmt", "time-driver", "critical-section-impl"]
 
 [dependencies.embassy-time]
 git = "https://github.com/embassy-rs/embassy.git"
-rev = "c3ef98a"
+rev = "591c404"
+features = ["defmt", "defmt-timestamp-uptime"]
+
+[dependencies.embassy-usb]
+git = "https://github.com/embassy-rs/embassy.git"
+rev = "591c404"
+features = ["defmt"]
+
+[dependencies.wmidi]
+version = "4.0.10"
+default-features = false
 
 [dependencies.panic-probe]
 version = "0.3.1"
 features = ["print-defmt"]
+
+[[bin]]
+name = "midi"
+test = false
+bench = false
+
+[[bin]]
+name = "blinky"
+test = false
+bench = false
