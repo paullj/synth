@@ -5,6 +5,7 @@
 use defmt_rtt as _;
 use embassy_executor::Spawner;
 use embassy_rp::gpio::{Level, Output};
+
 use embassy_time::{Duration, Timer};
 use panic_probe as _;
 
@@ -18,11 +19,11 @@ async fn main(_spawner: Spawner) {
     defmt::info!("Initialized.");
 
     loop {
-        defmt::info!("LED on!");
+        defmt::info!("My LED on!");
         led.set_high();
         Timer::after(Duration::from_millis(50)).await;
 
-        defmt::info!("LED off!");
+        defmt::info!("My LED off!");
         led.set_low();
         Timer::after(Duration::from_millis(950)).await;
     }
