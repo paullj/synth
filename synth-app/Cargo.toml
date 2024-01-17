@@ -11,13 +11,18 @@ publish = false
 embedded-graphics = "0.8.1"
 embedded-layout = "0.4.1"
 sfsm = { version = "0.4.3", features = ["trace"] }
-dasp = { version = "0.11.0", features = ["all"] }
 cpal = "0.15.2"
 anyhow = "1.0.44"
-crossbeam-channel = "0.5.10"
+crossbeam = "0.8.0"
+midi-msg = "*"
+midir = "*"
+read_input = "*"
+# glicol_synth = "0.13.2"
+# funutd = "0.14.0"
 
-[dev-dependencies]
-
+[dependencies.fundsp]
+version = "0.16.0"
+default-features = false
 
 # Dependencies for Raspberry Pi target
 [target.'cfg(target = "armv7-unknown-linux-gnueabihf")'.dependencies]
@@ -25,3 +30,8 @@ crossbeam-channel = "0.5.10"
 # Dependencies for other targets
 [target.'cfg(not(target = "armv7-unknown-linux-gnueabihf"))'.dependencies]
 embedded-graphics-simulator = "0.6.0"
+
+[[bin]]
+name = "dev"
+test = false
+bench = false
