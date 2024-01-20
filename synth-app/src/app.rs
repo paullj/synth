@@ -1,21 +1,22 @@
 use crate::{
-    input::{get_first_midi_device, start_input_thread},
+    input::{get_first_midi_device, start_midi_input_thread},
     output::start_output_thread,
 };
-
-use std::sync::Arc;
-
 use crossbeam::{atomic::AtomicCell, queue::SegQueue};
 use midir::MidiInput;
+use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]
 enum State {
-    Startup,
-    Play,
+    Startup(StartupScreen),
+    Running,
+    Error,
 }
+
 #[derive(Debug)]
-enum Transition {
+pub enum Event {
     Initialized,
+    Quit,
 }
 
 #[derive(Debug)]
@@ -23,51 +24,46 @@ pub struct App {
     state: State,
 }
 
-trait Runnable {
-    fn run(&mut self);
-}
-
-impl Runnable for State {
-    fn run(&mut self) {
-        match self {
-            State::Startup => {
-                println!("Starting up");
-            }
-            State::Play => {
-                println!("Playing");
-            }
-        }
-    }
-}
+#[derive(Debug, PartialEq)]
+struct StartupScreen {}
 
 impl App {
-    /// Create a new App.
     pub fn new() -> Self {
         Self {
-            state: State::Startup,
+            state: State::Startup(StartupScreen {}),
         }
     }
-    fn transition(&mut self, transition: Transition) {
-        match (&self.state, transition) {
-            (State::Startup, Transition::Initialized) => {
-                self.state = State::Play;
+    pub fn next(&mut self, event: Event) {
+        match (&self.state, event) {
+            (State::Startup(_), Event::Initialized) => {
+                self.state = State::Running;
             }
-            _ => panic!("Invalid transition"),
+            (_, Event::Quit) => {
+                println!("Quitting");
+            }
+            (_, _) => self.state = State::Error,
         }
     }
     pub fn run(&mut self) {
         match self.state {
-            State::Startup => {
-                let mut midi_in = MidiInput::new("MIDI Input").unwrap();
-                let in_port = get_first_midi_device(&mut midi_in).unwrap();
-                let midi_msgs = Arc::new(SegQueue::new());
+            State::Startup(_) => {
+                let mut input = MidiInput::new("MIDI Input").unwrap();
+                let input_port = get_first_midi_device(&mut input).unwrap();
+
+                let midi_messages = Arc::new(SegQueue::new());
                 let quit = Arc::new(AtomicCell::new(false));
-                start_input_thread(midi_msgs.clone(), midi_in, in_port, quit.clone());
-                start_output_thread::<6>(midi_msgs.clone());
-                self.transition(Transition::Initialized);
+
+                let input_handle =
+                    start_midi_input_thread(input, input_port, midi_messages.clone(), quit.clone());
+                let output_handle = start_output_thread(midi_messages.clone());
+
+                self.next(Event::Initialized);
             }
-            State::Play => {
+            State::Running => {
                 println!("Playing");
+            }
+            State::Error => {
+                println!("Error");
             }
         }
     }
@@ -79,8 +75,7 @@ mod tests {
 
     #[test]
     fn test_startup() {
-        let mut app = App::new();
-        app.run();
-        assert_eq!(app.state, State::Play);
+        let app = App::new();
+        assert_eq!(app.state, State::Startup(StartupScreen {}));
     }
 }
