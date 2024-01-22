@@ -56,7 +56,7 @@ impl<const N: usize> Player<N> {
         let supported_config = device.default_output_config()?;
         let config = supported_config.config();
 
-        println!("Output; {:?}", device.name()?);
+        println!("Output device: {:}", device.name()?);
 
         match supported_config.sample_format() {
             SampleFormat::F32 => self.run_synth::<f32>(midi_messages, device, config)?,
@@ -104,13 +104,14 @@ impl<const N: usize> Player<N> {
     }
 
     fn handle_messages(&mut self, midi_msgs: Arc<SegQueue<Vec<u8>>>, sequencer: &mut Sequencer64) {
+        let state = SynthState::default();
         loop {
             if let Some(msg) = midi_msgs.pop() {
-                let event = match bytes_to_midi(&msg) {
+                match bytes_to_midi(&msg) {
                     Ok(message) => match message {
                         wmidi::MidiMessage::NoteOn(_, note, _) => {
                             let pitch_hz = note.to_freq_f64();
-                            let v = 0.0 * 0.003;
+                            let v = state.vibrato_depth.value() * 0.003;
                             let pitch = lfo(move |t| {
                                 pitch_hz
                                     * xerp11(
@@ -123,21 +124,40 @@ impl<const N: usize> Player<N> {
                             let waveform = Net64::wrap(Box::new(pitch >> saw() * 0.5));
                             let filter = Net64::wrap(Box::new(pass()));
 
-                            let unit = Box::new(waveform >> filter);
+                            let ads =
+                                (var(&state.attack) | var(&state.decay) | var(&state.sustain))
+                                    >> lfo_in(|t, adsr: &Frame<f64, U3>| {
+                                        let a = adsr[0];
+                                        let d = adsr[1];
+                                        let s = adsr[2];
+                                        if t < a {
+                                            delerp(0.0, a, t)
+                                        } else if t < a + d {
+                                            lerp(1.0, s, delerp(a, a + d, t))
+                                        } else {
+                                            s
+                                        }
+                                    });
+
+                            let unit = Box::new(waveform * ads >> filter * var(&state.level));
 
                             let event_id = sequencer.push_relative(
                                 0.0,
                                 f64::INFINITY,
                                 Fade::Smooth,
-                                0.1,
-                                0.1,
+                                0.0,
+                                0.0,
                                 unit,
                             );
                             self.notes.insert(note, event_id);
                         }
                         wmidi::MidiMessage::NoteOff(_, note, _) => {
                             if let Some(event_id) = self.notes.get(&note) {
-                                sequencer.edit_relative(*event_id, 0.0, 0.0);
+                                sequencer.edit_relative(
+                                    *event_id,
+                                    state.release.value(),
+                                    state.release.value(),
+                                );
                             }
                         }
                         _ => (),
@@ -147,8 +167,49 @@ impl<const N: usize> Player<N> {
                         continue;
                     }
                 };
-                println!("Got event: {:?}", event);
             }
+        }
+    }
+}
+
+struct SynthState {
+    // Page 1
+    attack: Shared<f64>,
+    decay: Shared<f64>,
+    sustain: Shared<f64>,
+    release: Shared<f64>,
+    // Page 2
+    control_1: Shared<f64>,
+    control_2: Shared<f64>,
+    control_3: Shared<f64>,
+    control_4: Shared<f64>,
+    // Page 3
+    filter_cutoff: Shared<f64>,
+    filter_resonance: Shared<f64>,
+    filter_type: Shared<f64>,
+    level: Shared<f64>,
+    // Page 4
+    vibrato_rate: Shared<f64>,
+    vibrato_depth: Shared<f64>,
+}
+
+impl Default for SynthState {
+    fn default() -> Self {
+        Self {
+            attack: shared(0.4),
+            decay: shared(0.1),
+            sustain: shared(0.5),
+            release: shared(2.0),
+            control_1: shared(0.5),
+            control_2: shared(0.5),
+            control_3: shared(0.5),
+            control_4: shared(0.5),
+            filter_cutoff: shared(0.1),
+            filter_resonance: shared(0.1),
+            filter_type: shared(0.1),
+            level: shared(1.0),
+            vibrato_depth: shared(0.0),
+            vibrato_rate: shared(0.0),
         }
     }
 }

@@ -1,9 +1,9 @@
-use embedded_graphics::{geometry::Size, pixelcolor::Rgb565, prelude::*};
+use embedded_graphics::{geometry::Size, pixelcolor::Rgb565};
 use embedded_graphics_simulator::{
     sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use midir::{os::unix::VirtualOutput, MidiOutput, MidiOutputConnection};
-use synth_app::app::{App, Event};
+use synth_app::app::App;
 use synth_app::midi::midi_to_bytes;
 use wmidi::{Channel, MidiMessage, Note, Velocity};
 
@@ -14,47 +14,27 @@ const MAX_FPS: u32 = 60;
 
 /// Starts a display in the main thread and sends MIDI messages to a virtual output in a separate thread.
 fn main() {
-    let midi_con = start_midi_output();
-    let mut app = App::new();
-    app.run();
-
-    start_emulator(app, midi_con);
-}
-
-fn start_midi_output() -> MidiOutputConnection {
-    let midi_out: MidiOutput = match MidiOutput::new("midir sending output") {
-        Ok(m) => m,
-        Err(e) => {
-            panic!("Failed to create MIDI output: {}", e);
-        }
-    };
-    // let out_port = get_first_midi_device(&mut midi_out).unwrap();
-    let conn_out = match midi_out.create_virtual("Emulated MIDI Out") {
-        Ok(conn_out) => conn_out,
-        Err(e) => {
-            panic!("Failed to create MIDI output connection: {}", e);
-        }
-    };
-    println!("Created virtual MIDI output poirt");
-    conn_out
-}
-
-fn start_emulator(mut app: App, mut midi_con: MidiOutputConnection) {
-    let mut display: SimulatorDisplay<Rgb565> = SimulatorDisplay::new(Size::new(WIDTH, HEIGHT));
+    // Set up MIDI output
+    let mut midi_con = start_midi_output();
+    // Create a shared display
+    let mut display = SimulatorDisplay::<Rgb565>::new(Size::new(WIDTH, HEIGHT));
+    // let (tx, rx) = channel::bounded(0);
 
     let output_settings = OutputSettingsBuilder::new()
         .scale(SCALE)
         .max_fps(MAX_FPS)
         .build();
-    let mut window = Window::new("simulator", &output_settings);
 
+    // Set up app
+    let mut window = Window::new("simulator", &output_settings);
+    window.update(&display);
+
+    let mut app = App::new();
+    app.run();
     'running: loop {
-        display.clear(Rgb565::BLACK).unwrap();
-        window.update(&display);
         for event in window.events() {
             match event {
                 SimulatorEvent::Quit => {
-                    app.next(Event::Quit);
                     break 'running;
                 }
                 SimulatorEvent::KeyDown {
@@ -88,8 +68,31 @@ fn start_emulator(mut app: App, mut midi_con: MidiOutputConnection) {
                 _ => {}
             }
         }
+        // display.clear(Rgb565::BLACK).unwrap();
+        app.draw(&mut display);
+        window.update(&display);
     }
     midi_con.close();
+
+    // app.run();
+}
+
+fn start_midi_output() -> MidiOutputConnection {
+    let midi_out: MidiOutput = match MidiOutput::new("midir sending output") {
+        Ok(m) => m,
+        Err(e) => {
+            panic!("Failed to create MIDI output: {}", e);
+        }
+    };
+    // let out_port = get_first_midi_device(&mut midi_out).unwrap();
+    let conn_out = match midi_out.create_virtual("Emulated MIDI Out") {
+        Ok(conn_out) => conn_out,
+        Err(e) => {
+            panic!("Failed to create MIDI output connection: {}", e);
+        }
+    };
+    println!("Created virtual MIDI output port for dev");
+    conn_out
 }
 
 enum KeyPress {
