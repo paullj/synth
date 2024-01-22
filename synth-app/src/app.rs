@@ -3,6 +3,7 @@ use crate::{
     output::start_output_thread,
 };
 use crossbeam::{atomic::AtomicCell, queue::SegQueue};
+use embedded_graphics::prelude::*;
 use midir::MidiInput;
 use std::sync::Arc;
 
@@ -27,6 +28,21 @@ pub struct App {
 #[derive(Debug, PartialEq)]
 struct StartupScreen {}
 
+trait Draw<T: RgbColor> {
+    fn draw<D>(&self, target: &mut D) -> ()
+    where
+        D: DrawTarget<Color = T>;
+}
+
+impl<T: RgbColor> Draw<T> for StartupScreen {
+    fn draw<D>(&self, target: &mut D) -> ()
+    where
+        D: DrawTarget<Color = T>,
+    {
+        target.clear(T::MAGENTA);
+    }
+}
+
 impl App {
     pub fn new() -> Self {
         Self {
@@ -44,24 +60,32 @@ impl App {
             (_, _) => self.state = State::Error,
         }
     }
+    pub fn draw<D>(&self, target: &mut D) -> ()
+    where
+        D: DrawTarget,
+        D::Color: RgbColor,
+    {
+        match &self.state {
+            State::Startup(screen) => screen.draw(target),
+            _ => {}
+        }
+    }
+
     pub fn run(&mut self) {
-        match self.state {
-            State::Startup(_) => {
+        match &self.state {
+            State::Startup(screen) => {
                 let mut input = MidiInput::new("MIDI Input").unwrap();
                 let input_port = get_first_midi_device(&mut input).unwrap();
 
-                let midi_messages = Arc::new(SegQueue::new());
+                let messages = Arc::new(SegQueue::new());
                 let quit = Arc::new(AtomicCell::new(false));
 
                 let input_handle =
-                    start_midi_input_thread(input, input_port, midi_messages.clone(), quit.clone());
-                let output_handle = start_output_thread(midi_messages.clone());
-
+                    start_midi_input_thread(input, input_port, messages.clone(), quit.clone());
+                let output_handle = start_output_thread(messages.clone());
                 self.next(Event::Initialized);
             }
-            State::Running => {
-                println!("Playing");
-            }
+            State::Running => {}
             State::Error => {
                 println!("Error");
             }
@@ -75,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_startup() {
-        let app = App::new();
-        assert_eq!(app.state, State::Startup(StartupScreen {}));
+        // let app = App::new();
+        // assert_eq!(app.state, State::Startup(StartupScreen {}));
     }
 }

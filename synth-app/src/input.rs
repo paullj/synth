@@ -36,7 +36,7 @@ pub fn get_first_midi_device(midi_input: &mut MidiInput) -> anyhow::Result<MidiI
         bail!("No MIDI devices attached")
     } else {
         let device_name = midi_input.port_name(&input_ports[0])?;
-        println!("Chose MIDI device '{device_name}'");
+        println!("Input MIDI device: {}", device_name);
         Ok(input_ports[0].clone())
     }
 }
