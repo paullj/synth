@@ -5,7 +5,7 @@ use embedded_graphics_simulator::{
 use midir::{os::unix::VirtualOutput, MidiOutput, MidiOutputConnection};
 use synth_app::app::App;
 use synth_app::midi::midi_to_bytes;
-use wmidi::{Channel, MidiMessage, Note, Velocity};
+use wmidi::{Channel, MidiMessage, Note, Velocity, U7};
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 160;
@@ -16,6 +16,17 @@ const MAX_FPS: u32 = 60;
 fn main() {
     // Set up MIDI output
     let mut midi_con = start_midi_output();
+
+    let help_text = "    S   D       G   H   J\n\
+    |  |#| |#|  |  |#| |#| |#|  |  > Play   Q\n\
+    |  |#| |#|  |  |#| |#| |#|  |  ● Record W\n\
+    |  |#| |#|  |  |#| |#| |#|  |  ≡ Menu   O\n\
+    |   |   |   |   |   |   |   |  v Select P\n\
+    |___|___|___|___|___|___|___|\n\
+      Z   X   C   V   B   N   M";
+
+    println!("{}", help_text);
+
     // Create a shared display
     let mut display = SimulatorDisplay::<Rgb565>::new(Size::new(WIDTH, HEIGHT));
     // let (tx, rx) = channel::bounded(0);
@@ -30,8 +41,10 @@ fn main() {
     window.update(&display);
 
     let mut app = App::new();
-    app.run();
+
+    let start_time = std::time::Instant::now();
     'running: loop {
+        let frame_start = std::time::Instant::now();
         for event in window.events() {
             match event {
                 SimulatorEvent::Quit => {
@@ -69,7 +82,15 @@ fn main() {
             }
         }
         // display.clear(Rgb565::BLACK).unwrap();
-        app.draw(&mut display);
+        // app.draw(&mut display);
+        let frame_end = std::time::Instant::now();
+        let delta = (frame_end - frame_start).as_secs_f64();
+        let elapsed = (frame_end - start_time).as_secs_f64();
+        app.update(elapsed, delta);
+        match app.draw(&mut display, elapsed, delta) {
+            Ok(_) => {}
+            Err(err) => println!("Error drawing: {}", err),
+        }
         window.update(&display);
     }
     midi_con.close();
@@ -95,10 +116,15 @@ fn start_midi_output() -> MidiOutputConnection {
     conn_out
 }
 
+#[derive(Debug, PartialEq)]
 enum KeyPress {
     Down,
     Up,
 }
+
+const RECORD: &[u8] = &[0x02, 0x02, 0x02];
+const MENU: &[u8] = &[0x03, 0x03, 0x03];
+const SELECT: &[u8] = &[0x04, 0x04, 0x04];
 
 fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<'a>> {
     let note_message = keycode_to_note(
@@ -110,18 +136,23 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
     );
     match note_message {
         Some(msg) => Some(msg),
-        None => match keycode {
-            Keycode::Q => None,
-            Keycode::W => None,
-            Keycode::R => None,
-            Keycode::T => None,
-            Keycode::Y => None,
-            Keycode::U => None,
-            Keycode::O => None,
-            Keycode::P => None,
-            Keycode::Num1 => None,
-            _ => None,
-        },
+        None => {
+            if press == KeyPress::Down {
+                match keycode {
+                    Keycode::Q => Some(MidiMessage::Start),
+                    Keycode::W => Some(MidiMessage::SysEx(U7::try_from_bytes(RECORD).unwrap())),
+                    Keycode::R => None,
+                    Keycode::T => None,
+                    Keycode::Y => None,
+                    Keycode::U => None,
+                    Keycode::O => Some(MidiMessage::SysEx(U7::try_from_bytes(MENU).unwrap())),
+                    Keycode::P => Some(MidiMessage::SysEx(U7::try_from_bytes(SELECT).unwrap())),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        }
     }
 }
 
