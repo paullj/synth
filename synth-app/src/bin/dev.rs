@@ -45,6 +45,7 @@ fn main() {
     let start_time = std::time::Instant::now();
     'running: loop {
         let frame_start = std::time::Instant::now();
+
         for event in window.events() {
             match event {
                 SimulatorEvent::Quit => {
@@ -91,6 +92,7 @@ fn main() {
             Ok(_) => {}
             Err(err) => println!("Error drawing: {}", err),
         }
+
         window.update(&display);
     }
     midi_con.close();

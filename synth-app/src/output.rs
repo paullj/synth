@@ -115,66 +115,6 @@ impl<const N: usize> Player<N> {
         loop {
             if let Some(msg) = midi_msgs.pop() {
                 match msg {
-                    // Ok(message) => match message {
-                    //     wmidi::MidiMessage::NoteOn(_, note, _) => {
-                    //         let pitch_hz = note.to_freq_f64();
-                    //         let v = state.vibrato_depth.value() * 0.003;
-                    //         let pitch = lfo(move |t| {
-                    //             pitch_hz
-                    //                 * xerp11(
-                    //                     1.0 / (1.0 + v),
-                    //                     1.0 + v,
-                    //                     sin_hz(6.0, t) + sin_hz(6.1, t),
-                    //                 )
-                    //         });
-
-                    //         let waveform = Net64::wrap(Box::new(pitch >> saw() * 0.5));
-                    //         let filter = Net64::wrap(Box::new(pass()));
-
-                    //         let ads =
-                    //             (var(&state.attack) | var(&state.decay) | var(&state.sustain))
-                    //                 >> lfo_in(|t, adsr: &Frame<f64, U3>| {
-                    //                     let a = adsr[0];
-                    //                     let d = adsr[1];
-                    //                     let s = adsr[2];
-                    //                     if t < a {
-                    //                         delerp(0.0, a, t)
-                    //                     } else if t < a + d {
-                    //                         lerp(1.0, s, delerp(a, a + d, t))
-                    //                     } else {
-                    //                         s
-                    //                     }
-                    //                 });
-
-                    //         let reverb = Net64::wrap(Box::new(reverb_stereo(10.0, 0.5)));
-                    //         let pan = Net64::wrap(Box::new(pan(0.0)));
-                    //         let chorus = Net64::wrap(Box::new(
-                    //             var(&state.chorus) * chorus(0, 0.015, 0.005, 0.5),
-                    //         ));
-
-                    //         let unit = Box::new(waveform * ads >> filter);
-
-                    //         let event_id = sequencer.push_relative(
-                    //             0.0,
-                    //             f64::INFINITY,
-                    //             Fade::Smooth,
-                    //             0.0,
-                    //             0.0,
-                    //             unit,
-                    //         );
-                    //         self.notes.insert(note, event_id);
-                    //     }
-                    //     wmidi::MidiMessage::NoteOff(_, note, _) => {
-                    //         if let Some(event_id) = self.notes.get(&note) {
-                    //             sequencer.edit_relative(
-                    //                 *event_id,
-                    //                 state.release.value(),
-                    //                 state.release.value(),
-                    //             );
-                    //         }
-                    //     }
-                    //     _ => (),
-                    // },
                     EngineMessage::NoteOn(note) => {
                         let pitch_hz = note.to_freq_f64();
                         let v = state.vibrato_depth.value() * 0.003;
@@ -225,6 +165,7 @@ impl<const N: usize> Player<N> {
                                 state.release.value(),
                                 state.release.value(),
                             );
+
                         }
                     }
                     EngineMessage::ControlChange(_, _, _) => todo!(),

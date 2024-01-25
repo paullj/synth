@@ -12,11 +12,13 @@ use crate::{
 };
 
 use crossbeam::{atomic::AtomicCell, queue::SegQueue};
+
 use embedded_graphics::{
     mono_font::{ascii::FONT_6X10, MonoTextStyle},
     prelude::*,
     text::Text,
 };
+
 use midir::MidiInput;
 use std::{fmt, sync::Arc};
 use wmidi::Note;
@@ -58,6 +60,21 @@ pub(crate) enum ActionMessage {
     X,
     Y,
     Quit,
+}
+
+trait Draw<T: RgbColor> {
+    fn draw<D>(&self, target: &mut D) -> ()
+    where
+        D: DrawTarget<Color = T>;
+}
+
+impl<T: RgbColor> Draw<T> for StartupScreen {
+    fn draw<D>(&self, target: &mut D) -> ()
+    where
+        D: DrawTarget<Color = T>,
+    {
+        target.clear(T::MAGENTA);
+    }
 }
 
 impl App {
@@ -151,6 +168,7 @@ impl App {
 
         if let Some(event) = event {
             self.next(event);
+
         }
     }
 }
