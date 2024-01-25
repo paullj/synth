@@ -8,12 +8,13 @@ use crossbeam::queue::SegQueue;
 use fundsp::hacker::*;
 use wmidi::Note;
 
-use crate::midi::bytes_to_midi;
+use crate::app::EngineMessage;
 
-pub fn start_output_thread(midi_messages: Arc<SegQueue<Vec<u8>>>) -> JoinHandle<()> {
+pub fn start_output_thread(engine_messages: Arc<SegQueue<EngineMessage>>) -> JoinHandle<()> {
     std::thread::spawn(move || {
         let mut player = Player::<6>::new();
-        match player.run(midi_messages) {
+
+        match player.run(engine_messages) {
             Ok(_) => (),
             Err(err) => panic!("Error! {:?}", err),
         }
@@ -47,7 +48,7 @@ impl<const N: usize> Player<N> {
         }
     }
 
-    fn run(&mut self, midi_messages: Arc<SegQueue<Vec<u8>>>) -> Result<(), anyhow::Error> {
+    fn run(&mut self, midi_messages: Arc<SegQueue<EngineMessage>>) -> Result<(), anyhow::Error> {
         let host = cpal::default_host();
         let device = match host.default_output_device() {
             Some(device) => device,
@@ -69,7 +70,7 @@ impl<const N: usize> Player<N> {
 
     fn run_synth<T: Sample + SizedSample + FromSample<f64>>(
         &mut self,
-        midi_msgs: Arc<SegQueue<Vec<u8>>>,
+        midi_msgs: Arc<SegQueue<EngineMessage>>,
         device: Device,
         config: StreamConfig,
     ) -> Result<(), anyhow::Error> {
@@ -77,6 +78,7 @@ impl<const N: usize> Player<N> {
         let channels = config.channels as usize;
 
         let mut sequencer = Sequencer64::new(false, 1);
+
         let sequencer_backend = sequencer.backend();
         let mut network = Net64::wrap(Box::new(sequencer_backend));
 
@@ -84,7 +86,8 @@ impl<const N: usize> Player<N> {
 
         network.set_sample_rate(sample_rate);
 
-        // Use block processing for maximum efficiency.
+        // Use block processing for maximum efficiency
+        // FIXME: Remove this if latency is a problem
         let mut backend = BlockRateAdapter64::new(Box::new(network.backend()));
 
         let mut next_value = move || backend.get_stereo();
@@ -103,69 +106,69 @@ impl<const N: usize> Player<N> {
         Ok(())
     }
 
-    fn handle_messages(&mut self, midi_msgs: Arc<SegQueue<Vec<u8>>>, sequencer: &mut Sequencer64) {
+    fn handle_messages(
+        &mut self,
+        midi_msgs: Arc<SegQueue<EngineMessage>>,
+        sequencer: &mut Sequencer64,
+    ) {
         let state = SynthState::default();
         loop {
             if let Some(msg) = midi_msgs.pop() {
-                match bytes_to_midi(&msg) {
-                    Ok(message) => match message {
-                        wmidi::MidiMessage::NoteOn(_, note, _) => {
-                            let pitch_hz = note.to_freq_f64();
-                            let v = state.vibrato_depth.value() * 0.003;
-                            let pitch = lfo(move |t| {
-                                pitch_hz
-                                    * xerp11(
-                                        1.0 / (1.0 + v),
-                                        1.0 + v,
-                                        sin_hz(6.0, t) + sin_hz(6.1, t),
-                                    )
+                match msg {
+                    EngineMessage::NoteOn(note) => {
+                        let pitch_hz = note.to_freq_f64();
+                        let v = state.vibrato_depth.value() * 0.003;
+                        let pitch = lfo(move |t| {
+                            pitch_hz
+                                * xerp11(1.0 / (1.0 + v), 1.0 + v, sin_hz(6.0, t) + sin_hz(6.1, t))
+                        });
+
+                        let waveform = Net64::wrap(Box::new(pitch >> saw() * 0.5));
+                        let filter = Net64::wrap(Box::new(pass()));
+
+                        let ads = (var(&state.attack) | var(&state.decay) | var(&state.sustain))
+                            >> lfo_in(|t, adsr: &Frame<f64, U3>| {
+                                let a = adsr[0];
+                                let d = adsr[1];
+                                let s = adsr[2];
+                                if t < a {
+                                    delerp(0.0, a, t)
+                                } else if t < a + d {
+                                    lerp(1.0, s, delerp(a, a + d, t))
+                                } else {
+                                    s
+                                }
                             });
 
-                            let waveform = Net64::wrap(Box::new(pitch >> saw() * 0.5));
-                            let filter = Net64::wrap(Box::new(pass()));
+                        let reverb = Net64::wrap(Box::new(reverb_stereo(10.0, 0.5)));
+                        let pan = Net64::wrap(Box::new(pan(0.0)));
+                        let chorus = Net64::wrap(Box::new(
+                            var(&state.chorus) * chorus(0, 0.015, 0.005, 0.5),
+                        ));
 
-                            let ads =
-                                (var(&state.attack) | var(&state.decay) | var(&state.sustain))
-                                    >> lfo_in(|t, adsr: &Frame<f64, U3>| {
-                                        let a = adsr[0];
-                                        let d = adsr[1];
-                                        let s = adsr[2];
-                                        if t < a {
-                                            delerp(0.0, a, t)
-                                        } else if t < a + d {
-                                            lerp(1.0, s, delerp(a, a + d, t))
-                                        } else {
-                                            s
-                                        }
-                                    });
+                        let unit = Box::new(waveform * ads >> filter);
 
-                            let unit = Box::new(waveform * ads >> filter * var(&state.level));
-
-                            let event_id = sequencer.push_relative(
-                                0.0,
-                                f64::INFINITY,
-                                Fade::Smooth,
-                                0.0,
-                                0.0,
-                                unit,
-                            );
-                            self.notes.insert(note, event_id);
-                        }
-                        wmidi::MidiMessage::NoteOff(_, note, _) => {
-                            if let Some(event_id) = self.notes.get(&note) {
-                                sequencer.edit_relative(
-                                    *event_id,
-                                    state.release.value(),
-                                    state.release.value(),
-                                );
-                            }
-                        }
-                        _ => (),
-                    },
-                    Err(err) => {
-                        println!("Error decoding message: {}", err);
-                        continue;
+                        let event_id = sequencer.push_relative(
+                            0.0,
+                            f64::INFINITY,
+                            Fade::Smooth,
+                            0.0,
+                            0.0,
+                            unit,
+                        );
+                        self.notes.insert(note, event_id);
                     }
+                    EngineMessage::NoteOff(note) => {
+                        if let Some(event_id) = self.notes.get(&note) {
+                            sequencer.edit_relative(
+                                *event_id,
+                                state.release.value(),
+                                state.release.value(),
+                            );
+
+                        }
+                    }
+                    EngineMessage::ControlChange(_, _, _) => todo!(),
                 };
             }
         }
@@ -185,28 +188,32 @@ struct SynthState {
     control_4: Shared<f64>,
     // Page 3
     filter_cutoff: Shared<f64>,
-    filter_resonance: Shared<f64>,
     filter_type: Shared<f64>,
-    level: Shared<f64>,
-    // Page 4
     vibrato_rate: Shared<f64>,
     vibrato_depth: Shared<f64>,
+    // Page 4
+    reverb: Shared<f64>,
+    delay: Shared<f64>,
+    chorus: Shared<f64>,
+    level: Shared<f64>,
 }
 
 impl Default for SynthState {
     fn default() -> Self {
         Self {
-            attack: shared(0.4),
-            decay: shared(0.1),
-            sustain: shared(0.5),
-            release: shared(2.0),
+            attack: shared(0.2),
+            decay: shared(0.2),
+            sustain: shared(0.9),
+            release: shared(0.7),
             control_1: shared(0.5),
             control_2: shared(0.5),
             control_3: shared(0.5),
             control_4: shared(0.5),
             filter_cutoff: shared(0.1),
-            filter_resonance: shared(0.1),
             filter_type: shared(0.1),
+            reverb: shared(0.0),
+            delay: shared(0.0),
+            chorus: shared(0.0),
             level: shared(1.0),
             vibrato_depth: shared(0.0),
             vibrato_rate: shared(0.0),
