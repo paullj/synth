@@ -10,7 +10,7 @@ use embedded_graphics::{
     text::Text,
 };
 
-use crate::app::ActionMessage;
+use crate::app::{ActionMessage, State};
 
 use super::{Event, Screen};
 
@@ -20,7 +20,7 @@ pub(crate) struct ErrorScreen {
 }
 
 impl Screen for ErrorScreen {
-    fn draw<D>(&self, target: &mut D, time: f64, delta: f64) -> Result<(), Infallible>
+    fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,
         D::Color: RgbColor,
@@ -41,12 +41,7 @@ impl Screen for ErrorScreen {
         Ok(())
     }
 
-    fn update(
-        &mut self,
-        messages: Arc<SegQueue<ActionMessage>>,
-        time: f64,
-        delta: f64,
-    ) -> Option<Event> {
+    fn update(&mut self, state: &State, _: Arc<SegQueue<ActionMessage>>) -> Option<Event> {
         None
     }
 

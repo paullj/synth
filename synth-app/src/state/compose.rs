@@ -3,7 +3,7 @@ use std::{convert::Infallible, sync::Arc};
 use crossbeam::queue::SegQueue;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::RgbColor, prelude::*};
 
-use crate::app::ActionMessage;
+use crate::app::{ActionMessage, State};
 
 use super::{Event, Screen};
 
@@ -14,7 +14,7 @@ impl Screen for ComposeScreen {
     fn entry(&mut self) {}
 
     fn exit(&mut self) {}
-    fn draw<D>(&self, target: &mut D, time: f64, delta: f64) -> Result<(), Infallible>
+    fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,
         D::Color: RgbColor,
@@ -23,14 +23,9 @@ impl Screen for ComposeScreen {
         Ok(())
     }
 
-    fn update(
-        &mut self,
-        messages: Arc<SegQueue<ActionMessage>>,
-        time: f64,
-        delta: f64,
-    ) -> Option<Event> {
-        while !messages.is_empty() {
-            if let Some(action) = messages.pop() {
+    fn update(&mut self, state: &State, actions: Arc<SegQueue<ActionMessage>>) -> Option<Event> {
+        while !actions.is_empty() {
+            if let Some(action) = actions.pop() {
                 match action {
                     ActionMessage::X => return Some(Event::OpenModeMenu),
                     _ => (),

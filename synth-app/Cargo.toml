@@ -9,14 +9,13 @@ publish = false
 
 [dependencies]
 embedded-graphics = "0.8.1"
-embedded-layout = "0.4.1"
-sfsm = { version = "0.4.3", features = ["trace"] }
 cpal = "0.15.2"
 anyhow = "1.0.44"
 crossbeam = "0.8.0"
 midir = "*"
 read_input = "*"
 wmidi = "4.0.10"
+easer = "0.3.0"
 
 [dependencies.fundsp]
 version = "0.16.0"

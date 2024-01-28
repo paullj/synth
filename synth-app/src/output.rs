@@ -8,13 +8,16 @@ use crossbeam::queue::SegQueue;
 use fundsp::hacker::*;
 use wmidi::Note;
 
-use crate::app::EngineMessage;
+use crate::app::{EngineMessage, State, StateParameter};
 
-pub fn start_output_thread(engine_messages: Arc<SegQueue<EngineMessage>>) -> JoinHandle<()> {
+pub fn start_output_thread(
+    state: Arc<State>,
+    messages: Arc<SegQueue<EngineMessage>>,
+) -> JoinHandle<()> {
     std::thread::spawn(move || {
         let mut player = Player::<6>::new();
 
-        match player.run(engine_messages) {
+        match player.run(state, messages) {
             Ok(_) => (),
             Err(err) => panic!("Error! {:?}", err),
         }
@@ -48,7 +51,11 @@ impl<const N: usize> Player<N> {
         }
     }
 
-    fn run(&mut self, midi_messages: Arc<SegQueue<EngineMessage>>) -> Result<(), anyhow::Error> {
+    fn run(
+        &mut self,
+        state: Arc<State>,
+        messages: Arc<SegQueue<EngineMessage>>,
+    ) -> Result<(), anyhow::Error> {
         let host = cpal::default_host();
         let device = match host.default_output_device() {
             Some(device) => device,
@@ -60,9 +67,9 @@ impl<const N: usize> Player<N> {
         println!("Output device: {:}", device.name()?);
 
         match supported_config.sample_format() {
-            SampleFormat::F32 => self.run_synth::<f32>(midi_messages, device, config)?,
-            SampleFormat::I16 => self.run_synth::<i16>(midi_messages, device, config)?,
-            SampleFormat::U16 => self.run_synth::<u16>(midi_messages, device, config)?,
+            SampleFormat::F32 => self.run_synth::<f32>(state, messages, device, config)?,
+            SampleFormat::I16 => self.run_synth::<i16>(state, messages, device, config)?,
+            SampleFormat::U16 => self.run_synth::<u16>(state, messages, device, config)?,
             sample_format => panic!("Unsupported sample format '{sample_format}'"),
         };
         Ok(())
@@ -70,7 +77,8 @@ impl<const N: usize> Player<N> {
 
     fn run_synth<T: Sample + SizedSample + FromSample<f64>>(
         &mut self,
-        midi_msgs: Arc<SegQueue<EngineMessage>>,
+        state: Arc<State>,
+        messages: Arc<SegQueue<EngineMessage>>,
         device: Device,
         config: StreamConfig,
     ) -> Result<(), anyhow::Error> {
@@ -102,19 +110,19 @@ impl<const N: usize> Player<N> {
             None,
         )?;
         stream.play()?;
-        self.handle_messages(midi_msgs, &mut sequencer);
+        self.handle_messages(state, messages, &mut sequencer);
         Ok(())
     }
 
     fn handle_messages(
         &mut self,
-        midi_msgs: Arc<SegQueue<EngineMessage>>,
+        state: Arc<State>,
+        messages: Arc<SegQueue<EngineMessage>>,
         sequencer: &mut Sequencer64,
     ) {
-        let state = SynthState::default();
         loop {
-            if let Some(msg) = midi_msgs.pop() {
-                match msg {
+            if let Some(message) = messages.pop() {
+                match message {
                     EngineMessage::NoteOn(note) => {
                         let pitch_hz = note.to_freq_f64();
                         let v = state.vibrato_depth.value() * 0.003;
@@ -165,10 +173,31 @@ impl<const N: usize> Player<N> {
                                 state.release.value(),
                                 state.release.value(),
                             );
-
                         }
                     }
-                    EngineMessage::ControlChange(_, _, _) => todo!(),
+                    EngineMessage::ChangeParameter(direction, param) => match param {
+                        StateParameter::Attack => {
+                            state.attack.set(
+                                (state.attack.value() + (5.0 / 32.0) * direction).clamp(0.0, 5.0),
+                            );
+                        }
+                        StateParameter::Decay => {
+                            state.decay.set(
+                                (state.decay.value() + (5.0 / 32.0) * direction).clamp(0.0, 5.0),
+                            );
+                        }
+                        StateParameter::Sustain => {
+                            state.sustain.set(
+                                (state.sustain.value() + (1.0 / 32.0) * direction).clamp(0.0, 1.0),
+                            );
+                        }
+                        StateParameter::Release => {
+                            state.release.set(
+                                (state.release.value() + (5.0 / 32.0) * direction).clamp(0.0, 5.0),
+                            );
+                        }
+                        _ => (),
+                    },
                 };
             }
         }

@@ -1,12 +1,12 @@
 use crate::{
-    app::{ActionMessage, EngineMessage},
+    app::{ActionMessage, Direction, EngineMessage, StateParameter},
     midi::bytes_to_midi,
 };
 use anyhow::bail;
 use crossbeam::{atomic::AtomicCell, queue::SegQueue};
 use midir::{Ignore, MidiInput, MidiInputPort};
 use std::{sync::Arc, thread::JoinHandle};
-use wmidi::{MidiMessage, U7};
+use wmidi::{Channel, ControlFunction, MidiMessage, U7};
 
 /// Starts a thread that reads MIDI messages from the given port and pushes them into a queue.
 pub fn start_midi_input_thread(
@@ -30,7 +30,70 @@ pub fn start_midi_input_thread(
                         MidiMessage::NoteOn(_, note, _) => {
                             engine_messages.push(EngineMessage::NoteOn(note));
                         }
-                        MidiMessage::ControlChange(_, _, _) => todo!(),
+                        MidiMessage::ControlChange(
+                            Channel::Ch1,
+                            ControlFunction::DATA_INCREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Increment,
+                            StateParameter::Attack,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch1,
+                            ControlFunction::DATA_DECREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Decrement,
+                            StateParameter::Attack,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch2,
+                            ControlFunction::DATA_INCREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Increment,
+                            StateParameter::Decay,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch2,
+                            ControlFunction::DATA_DECREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Decrement,
+                            StateParameter::Decay,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch3,
+                            ControlFunction::DATA_INCREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Increment,
+                            StateParameter::Sustain,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch3,
+                            ControlFunction::DATA_DECREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Decrement,
+                            StateParameter::Sustain,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch4,
+                            ControlFunction::DATA_INCREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Increment,
+                            StateParameter::Release,
+                        )),
+                        MidiMessage::ControlChange(
+                            Channel::Ch4,
+                            ControlFunction::DATA_DECREMENT,
+                            _,
+                        ) => engine_messages.push(EngineMessage::ChangeParameter(
+                            Direction::Decrement,
+                            StateParameter::Release,
+                        )),
                         MidiMessage::Start => action_messages.push(ActionMessage::A),
                         MidiMessage::SysEx(bytes) => {
                             // TODO: A better way to match custom SysEx messages
@@ -42,6 +105,7 @@ pub fn start_midi_input_thread(
                                 action_messages.push(ActionMessage::Y);
                             }
                         }
+
                         _ => (),
                     },
                     Err(err) => println!("MIDI From Bytes Error: {}", err),

@@ -5,7 +5,7 @@ pub mod mode;
 pub mod play;
 pub mod startup;
 
-use crate::app::ActionMessage;
+use crate::app::{ActionMessage, State};
 
 use self::{
     compose::ComposeScreen, edit::EditScreen, error::ErrorScreen, mode::ModeScreen,
@@ -25,7 +25,7 @@ pub(crate) enum Event {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum State {
+pub(crate) enum Machine {
     Startup(StartupScreen),
     Play(PlayScreen),
     Mode(ModeScreen),
@@ -34,30 +34,25 @@ pub(crate) enum State {
     Error(ErrorScreen),
 }
 
-impl fmt::Display for State {
+impl fmt::Display for Machine {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            State::Startup(_) => write!(f, "Startup"),
-            State::Mode(_) => write!(f, "Mode"),
-            State::Compose(_) => write!(f, "Compose"),
-            State::Edit(_) => write!(f, "Edit"),
-            State::Play(_) => write!(f, "Play"),
-            State::Error(ErrorScreen { message }) => write!(f, "Error: {}", message),
+            Machine::Startup(_) => write!(f, "Startup"),
+            Machine::Mode(_) => write!(f, "Mode"),
+            Machine::Compose(_) => write!(f, "Compose"),
+            Machine::Edit(_) => write!(f, "Edit"),
+            Machine::Play(_) => write!(f, "Play"),
+            Machine::Error(ErrorScreen { message }) => write!(f, "Error: {}", message),
         }
     }
 }
 
 pub(crate) trait Screen {
     fn entry(&mut self);
-    fn update(
-        &mut self,
-        messages: Arc<SegQueue<ActionMessage>>,
-        time: f64,
-        delta: f64,
-    ) -> Option<Event>;
+    fn update(&mut self, shared: &State, actions: Arc<SegQueue<ActionMessage>>) -> Option<Event>;
     fn exit(&mut self);
 
-    fn draw<D>(&self, target: &mut D, time: f64, delta: f64) -> Result<(), Infallible>
+    fn draw<D>(&self, target: &mut D, shared: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,
         D::Color: RgbColor;

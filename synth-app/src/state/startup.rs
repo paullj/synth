@@ -1,4 +1,8 @@
-use std::{convert::Infallible, sync::Arc};
+use std::{
+    convert::Infallible,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use crossbeam::queue::SegQueue;
 use embedded_graphics::{
@@ -10,18 +14,33 @@ use embedded_graphics::{
     text::{Alignment, Text},
 };
 
-use crate::app::ActionMessage;
+use crate::app::{ActionMessage, State};
 
 use super::{Event, Screen};
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct StartupScreen {}
+pub(crate) struct StartupScreen {
+    pub(crate) time_entry: Option<Instant>,
+}
+
+const DURATION: f64 = 1.0;
+
+impl Default for StartupScreen {
+    fn default() -> Self {
+        Self { time_entry: None }
+    }
+}
 
 impl Screen for StartupScreen {
-    fn entry(&mut self) {}
+    fn entry(&mut self) {
+        self.time_entry = Some(Instant::now());
+    }
 
-    fn exit(&mut self) {}
-    fn draw<D>(&self, target: &mut D, time: f64, delta: f64) -> Result<(), Infallible>
+    fn exit(&mut self) {
+        self.time_entry = None;
+    }
+
+    fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,
         D::Color: RgbColor,
@@ -31,27 +50,30 @@ impl Screen for StartupScreen {
 
         target.clear(D::Color::BLACK);
 
-        let text = Text::with_alignment(
-            &format!("time={:.2}, ", time),
-            Point::new(320 / 2, 160 / 2),
-            style,
-            Alignment::Center,
-        )
-        .draw(target);
-        match text {
-            Ok(_) => {}
-            Err(_) => panic!("Error drawing text"),
-        };
+        if let Some(_) = self.time_entry {
+            let text = Text::with_alignment(
+                "booting...",
+                Point::new(320 / 2, 160 / 2),
+                style,
+                Alignment::Center,
+            )
+            .draw(target);
+            match text {
+                Ok(_) => {}
+                Err(_) => panic!("Error drawing text"),
+            };
+        }
 
         Ok(())
     }
 
-    fn update(
-        &mut self,
-        messages: Arc<SegQueue<ActionMessage>>,
-        time: f64,
-        delta: f64,
-    ) -> Option<Event> {
+    fn update(&mut self, state: &State, _: Arc<SegQueue<ActionMessage>>) -> Option<Event> {
+        if let Some(time) = self.time_entry {
+            if (Instant::now() - time).as_secs_f64() > DURATION {
+                return Some(Event::Initialized);
+            }
+        }
+
         None
     }
 }

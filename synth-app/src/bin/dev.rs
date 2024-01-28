@@ -5,7 +5,7 @@ use embedded_graphics_simulator::{
 use midir::{os::unix::VirtualOutput, MidiOutput, MidiOutputConnection};
 use synth_app::app::App;
 use synth_app::midi::midi_to_bytes;
-use wmidi::{Channel, MidiMessage, Note, Velocity, U7};
+use wmidi::{Channel, ControlFunction, MidiMessage, Note, Velocity, U7};
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 160;
@@ -29,7 +29,6 @@ fn main() {
 
     // Create a shared display
     let mut display = SimulatorDisplay::<Rgb565>::new(Size::new(WIDTH, HEIGHT));
-    // let (tx, rx) = channel::bounded(0);
 
     let output_settings = OutputSettingsBuilder::new()
         .scale(SCALE)
@@ -42,10 +41,7 @@ fn main() {
 
     let mut app = App::new();
 
-    let start_time = std::time::Instant::now();
     'running: loop {
-        let frame_start = std::time::Instant::now();
-
         for event in window.events() {
             match event {
                 SimulatorEvent::Quit => {
@@ -82,13 +78,9 @@ fn main() {
                 _ => {}
             }
         }
-        // display.clear(Rgb565::BLACK).unwrap();
-        // app.draw(&mut display);
-        let frame_end = std::time::Instant::now();
-        let delta = (frame_end - frame_start).as_secs_f64();
-        let elapsed = (frame_end - start_time).as_secs_f64();
-        app.update(elapsed, delta);
-        match app.draw(&mut display, elapsed, delta) {
+
+        app.update();
+        match app.draw(&mut display) {
             Ok(_) => {}
             Err(err) => println!("Error drawing: {}", err),
         }
@@ -149,6 +141,58 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
                     Keycode::U => None,
                     Keycode::O => Some(MidiMessage::SysEx(U7::try_from_bytes(MENU).unwrap())),
                     Keycode::P => Some(MidiMessage::SysEx(U7::try_from_bytes(SELECT).unwrap())),
+                    Keycode::Num1 => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num2 => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num3 => Some(MidiMessage::ControlChange(
+                        Channel::Ch2,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num4 => Some(MidiMessage::ControlChange(
+                        Channel::Ch2,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num5 => Some(MidiMessage::ControlChange(
+                        Channel::Ch3,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num6 => Some(MidiMessage::ControlChange(
+                        Channel::Ch3,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num7 => Some(MidiMessage::ControlChange(
+                        Channel::Ch4,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num8 => Some(MidiMessage::ControlChange(
+                        Channel::Ch4,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num9 => None,
+                    Keycode::Num0 => None,
+                    Keycode::Minus => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Equals => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
                     _ => None,
                 }
             } else {
@@ -165,7 +209,7 @@ trait KeycodeNote {
 impl KeycodeNote for Keycode {
     fn value(self) -> Option<Note> {
         match self {
-            Keycode::Z => Some(Note::C4),
+            Keycode::Z => Some(Note::from_u8_lossy(60)),
             Keycode::S => Some(Note::Db4),
             Keycode::X => Some(Note::D4),
             Keycode::D => Some(Note::Eb4),
