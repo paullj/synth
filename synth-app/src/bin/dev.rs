@@ -141,6 +141,7 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
                     Keycode::U => None,
                     Keycode::O => Some(MidiMessage::SysEx(U7::try_from_bytes(MENU).unwrap())),
                     Keycode::P => Some(MidiMessage::SysEx(U7::try_from_bytes(SELECT).unwrap())),
+                    // TODO: Probably will need to use a different MIDI message for these
                     Keycode::Num1 => Some(MidiMessage::ControlChange(
                         Channel::Ch1,
                         ControlFunction::DATA_DECREMENT,
@@ -203,31 +204,35 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
 }
 
 trait KeycodeNote {
-    fn value(self) -> Option<Note>;
+    fn value(self, octave: u8) -> Option<Note>;
 }
 
 impl KeycodeNote for Keycode {
-    fn value(self) -> Option<Note> {
+    fn value(self, octave: u8) -> Option<Note> {
+        if octave > 10 {
+            return None;
+        }
+
         match self {
-            Keycode::Z => Some(Note::from_u8_lossy(60)),
-            Keycode::S => Some(Note::Db4),
-            Keycode::X => Some(Note::D4),
-            Keycode::D => Some(Note::Eb4),
-            Keycode::C => Some(Note::E4),
-            Keycode::V => Some(Note::F4),
-            Keycode::G => Some(Note::Gb4),
-            Keycode::B => Some(Note::G4),
-            Keycode::H => Some(Note::Ab4),
-            Keycode::N => Some(Note::A4),
-            Keycode::J => Some(Note::Bb4),
-            Keycode::M => Some(Note::B4),
+            Keycode::Z => Some(Note::from_u8_lossy(0 + (octave * 12))),
+            Keycode::S => Some(Note::from_u8_lossy(1 + (octave * 12))),
+            Keycode::X => Some(Note::from_u8_lossy(2 + (octave * 12))),
+            Keycode::D => Some(Note::from_u8_lossy(3 + (octave * 12))),
+            Keycode::C => Some(Note::from_u8_lossy(4 + (octave * 12))),
+            Keycode::V => Some(Note::from_u8_lossy(5 + (octave * 12))),
+            Keycode::G => Some(Note::from_u8_lossy(6 + (octave * 12))),
+            Keycode::B => Some(Note::from_u8_lossy(7 + (octave * 12))),
+            Keycode::H => Some(Note::from_u8_lossy(8 + (octave * 12))),
+            Keycode::N => Some(Note::from_u8_lossy(9 + (octave * 12))),
+            Keycode::J => Some(Note::from_u8_lossy(10 + (octave * 12))),
+            Keycode::M => Some(Note::from_u8_lossy(11 + (octave * 12))),
             _ => None,
         }
     }
 }
 
 fn keycode_to_note<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<'a>> {
-    let note = keycode.value();
+    let note = keycode.value(4);
     match note {
         Some(note) => match press {
             KeyPress::Down => Some(MidiMessage::NoteOn(Channel::Ch1, note, Velocity::MAX)),

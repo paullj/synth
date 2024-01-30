@@ -3,10 +3,16 @@
 - [ ] Live parameter changes
   - [x] ADSR
   - [ ] Filter
+  - [ ] LFO
 - [ ] Visualiser
+  - [ ] Oscilloscope
+  - [ ] Spectrum analyser
+  - [x] Shared State
 - [ ] Record to file
+- [ ] Support for octave changes
 
 ### Firmware
+- [ ] Support for octave changes
 
 ### PCB
 - [ ] Setup KiCad project

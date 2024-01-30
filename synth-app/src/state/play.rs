@@ -7,7 +7,7 @@ use embedded_graphics::{
     mono_font::{ascii::FONT_6X10, MonoTextStyle},
     pixelcolor::RgbColor,
     prelude::*,
-    primitives::{Line, PrimitiveStyle},
+    primitives::{Line, PrimitiveStyle, Rectangle},
     text::{Alignment, Text},
 };
 
@@ -28,7 +28,7 @@ pub(crate) enum EngineMenu {
     Effects = 3,
 }
 
-const MARGIN: i32 = 10;
+const MARGIN: i32 = 40;
 
 impl EngineMenu {
     fn next(&self) -> Self {
@@ -92,17 +92,32 @@ impl Screen for PlayScreen {
                 };
                 let attack_end = Point {
                     x: attack_start.x
-                        + Cubic::ease_out(shared.attack.value(), 0.0, 300.0 / 4.0, 5.0).round()
-                            as i32,
+                        + Cubic::ease_out(
+                            shared.attack.value(),
+                            0.0,
+                            (320.0 - f64::from(MARGIN) * 2.0) / 4.0,
+                            5.0,
+                        )
+                        .round() as i32,
                     y: MARGIN,
                 };
                 let decay_end = Point {
                     x: attack_end.x
-                        + Cubic::ease_out(shared.decay.value(), 0.0, 300.0 / 4.0, 5.0).round()
-                            as i32,
+                        + Cubic::ease_out(
+                            shared.decay.value(),
+                            0.0,
+                            (320.0 - f64::from(MARGIN) * 2.0) / 4.0,
+                            5.0,
+                        )
+                        .round() as i32,
                     y: attack_end.y
-                        + Linear::ease_out(1.0 - shared.sustain.value(), 0.0, 140.0, 1.0).round()
-                            as i32,
+                        + Linear::ease_out(
+                            1.0 - shared.sustain.value(),
+                            0.0,
+                            (160.0 - f64::from(MARGIN) * 2.0),
+                            1.0,
+                        )
+                        .round() as i32,
                 };
                 let sustain_end = Point {
                     x: decay_end.x + 300 / 4,
@@ -110,22 +125,72 @@ impl Screen for PlayScreen {
                 };
                 let release_end = Point {
                     x: sustain_end.x
-                        + Cubic::ease_out(shared.release.value(), 0.0, 300.0 / 4.0, 5.0).round()
-                            as i32,
+                        + Cubic::ease_out(
+                            shared.release.value(),
+                            0.0,
+                            (320.0 - f64::from(MARGIN) * 2.0) / 4.0,
+                            5.0,
+                        )
+                        .round() as i32,
                     y: 160 - MARGIN,
                 };
                 Line::new(attack_start, attack_end)
-                    .into_styled(PrimitiveStyle::with_stroke(D::Color::BLUE, 1))
+                    .into_styled(PrimitiveStyle::with_stroke(D::Color::BLUE, 5))
                     .draw(target);
                 Line::new(attack_end, decay_end)
-                    .into_styled(PrimitiveStyle::with_stroke(D::Color::RED, 1))
+                    .into_styled(PrimitiveStyle::with_stroke(D::Color::RED, 5))
                     .draw(target);
                 Line::new(decay_end, sustain_end)
-                    .into_styled(PrimitiveStyle::with_stroke(D::Color::GREEN, 1))
+                    .into_styled(PrimitiveStyle::with_stroke(D::Color::GREEN, 5))
                     .draw(target);
                 Line::new(sustain_end, release_end)
-                    .into_styled(PrimitiveStyle::with_stroke(D::Color::YELLOW, 1))
+                    .into_styled(PrimitiveStyle::with_stroke(D::Color::YELLOW, 5))
                     .draw(target);
+                Rectangle::with_center(
+                    attack_start,
+                    Size {
+                        width: 10,
+                        height: 10,
+                    },
+                )
+                .into_styled(PrimitiveStyle::with_fill(D::Color::BLUE))
+                .draw(target);
+                Rectangle::with_center(
+                    attack_end,
+                    Size {
+                        width: 10,
+                        height: 10,
+                    },
+                )
+                .into_styled(PrimitiveStyle::with_fill(D::Color::RED))
+                .draw(target);
+                Rectangle::with_center(
+                    decay_end,
+                    Size {
+                        width: 10,
+                        height: 10,
+                    },
+                )
+                .into_styled(PrimitiveStyle::with_fill(D::Color::GREEN))
+                .draw(target);
+                Rectangle::with_center(
+                    sustain_end,
+                    Size {
+                        width: 10,
+                        height: 10,
+                    },
+                )
+                .into_styled(PrimitiveStyle::with_fill(D::Color::GREEN))
+                .draw(target);
+                Rectangle::with_center(
+                    release_end,
+                    Size {
+                        width: 10,
+                        height: 10,
+                    },
+                )
+                .into_styled(PrimitiveStyle::with_fill(D::Color::YELLOW))
+                .draw(target);
             }
             EngineMenu::Filter => {}
             EngineMenu::Effects => {}
