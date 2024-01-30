@@ -4,7 +4,6 @@ use crossbeam::queue::SegQueue;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::RgbColor, prelude::*};
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]
@@ -12,7 +11,6 @@ pub(crate) struct EditScreen {}
 
 impl Screen for EditScreen {
     fn entry(&mut self) {}
-
     fn exit(&mut self) {}
     fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where

@@ -12,7 +12,6 @@ use embedded_graphics::{
 };
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]
@@ -63,9 +62,7 @@ impl Default for PlayScreen {
 
 impl Screen for PlayScreen {
     fn entry(&mut self) {}
-
     fn exit(&mut self) {}
-
     fn draw<D>(&self, target: &mut D, shared: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,

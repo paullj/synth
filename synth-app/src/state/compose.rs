@@ -4,7 +4,6 @@ use crossbeam::queue::SegQueue;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::RgbColor, prelude::*};
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]

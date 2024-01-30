@@ -11,7 +11,6 @@ use embedded_graphics::{
 };
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]

@@ -105,7 +105,6 @@ pub fn start_midi_input_thread(
                                 action_messages.push(ActionMessage::Y);
                             }
                         }
-
                         _ => (),
                     },
                     Err(err) => println!("MIDI From Bytes Error: {}", err),

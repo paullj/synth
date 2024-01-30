@@ -51,7 +51,6 @@ pub(crate) trait Screen {
     fn entry(&mut self);
     fn update(&mut self, shared: &State, actions: Arc<SegQueue<ActionMessage>>) -> Option<Event>;
     fn exit(&mut self);
-
     fn draw<D>(&self, target: &mut D, shared: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,

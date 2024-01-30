@@ -42,6 +42,8 @@ fn main() {
     let mut app = App::new();
 
     'running: loop {
+        let frame_start = std::time::Instant::now();
+
         for event in window.events() {
             match event {
                 SimulatorEvent::Quit => {
@@ -78,7 +80,7 @@ fn main() {
                 _ => {}
             }
         }
-
+      
         app.update();
         match app.draw(&mut display) {
             Ok(_) => {}
@@ -88,8 +90,6 @@ fn main() {
         window.update(&display);
     }
     midi_con.close();
-
-    // app.run();
 }
 
 fn start_midi_output() -> MidiOutputConnection {
@@ -99,7 +99,6 @@ fn start_midi_output() -> MidiOutputConnection {
             panic!("Failed to create MIDI output: {}", e);
         }
     };
-    // let out_port = get_first_midi_device(&mut midi_out).unwrap();
     let conn_out = match midi_out.create_virtual("Emulated MIDI Out") {
         Ok(conn_out) => conn_out,
         Err(e) => {

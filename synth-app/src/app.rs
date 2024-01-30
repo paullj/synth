@@ -11,6 +11,7 @@ use crate::{
         Event, Machine, Screen,
     },
 };
+
 use crossbeam::{atomic::AtomicCell, queue::SegQueue};
 use fundsp::shared::Shared;
 

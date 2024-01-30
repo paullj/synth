@@ -14,7 +14,6 @@ use embedded_graphics::{
 };
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]
@@ -68,7 +67,6 @@ impl fmt::Display for Mode {
 
 impl Screen for ModeScreen {
     fn entry(&mut self) {}
-
     fn exit(&mut self) {}
     fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where

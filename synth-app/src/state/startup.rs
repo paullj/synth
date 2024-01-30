@@ -15,7 +15,6 @@ use embedded_graphics::{
 };
 
 use crate::app::{ActionMessage, State};
-
 use super::{Event, Screen};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -63,7 +62,6 @@ impl Screen for StartupScreen {
                 Err(_) => panic!("Error drawing text"),
             };
         }
-
         Ok(())
     }
 
@@ -73,7 +71,6 @@ impl Screen for StartupScreen {
                 return Some(Event::Initialized);
             }
         }
-
         None
     }
 }
