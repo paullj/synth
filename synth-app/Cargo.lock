@@ -190,12 +190,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "convert_case"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -374,6 +368,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "545b22097d44f8a9581187cdf93de7a71e4722bf51200cfaba810865b49a495d"
 
 [[package]]
+name = "easer"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba524f8b83c9c5bde02c2bb1627de9d1f81980489a6d54168cdfd08c258f917"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -413,27 +416,6 @@ dependencies = [
  "image",
  "ouroboros",
  "sdl2",
-]
-
-[[package]]
-name = "embedded-layout"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd38d6d83acd193889e7fbdffc9d16bb82d4328d372c7c75826619a8eb8cbcda"
-dependencies = [
- "embedded-graphics",
- "embedded-layout-macros",
-]
-
-[[package]]
-name = "embedded-layout-macros"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f6e621fe4c7e05b695274b722dc0a60bacd1c8696b58191baa0154713d52400"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.48",
 ]
 
 [[package]]
@@ -1195,35 +1177,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sfsm"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a289ce9b0eba12af4255644fb14c0bffeeaf5bf5330fd9263934fcec08b6d8d"
-dependencies = [
- "sfsm-base",
- "sfsm-proc",
-]
-
-[[package]]
-name = "sfsm-base"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cd9e118b1836f9a7ace413b1b6d43f966d17a91511b391cd71d7f17cad6bfce"
-
-[[package]]
-name = "sfsm-proc"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bb0715248b6926a29181937bc0bddf6c35e521d2896924a7934877caeea474b"
-dependencies = [
- "convert_case",
- "proc-macro2",
- "quote",
- "sfsm-base",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "shlex"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1276,13 +1229,12 @@ dependencies = [
  "anyhow",
  "cpal",
  "crossbeam",
+ "easer",
  "embedded-graphics",
  "embedded-graphics-simulator",
- "embedded-layout",
  "fundsp",
  "midir",
  "read_input",
- "sfsm",
  "wmidi",
 ]
 

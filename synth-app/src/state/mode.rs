@@ -13,8 +13,7 @@ use embedded_graphics::{
     text::{Alignment, Text},
 };
 
-use crate::app::ActionMessage;
-
+use crate::app::{ActionMessage, State};
 use super::{Event, Screen};
 
 #[derive(Debug, PartialEq)]
@@ -68,9 +67,8 @@ impl fmt::Display for Mode {
 
 impl Screen for ModeScreen {
     fn entry(&mut self) {}
-
     fn exit(&mut self) {}
-    fn draw<D>(&self, target: &mut D, time: f64, delta: f64) -> Result<(), Infallible>
+    fn draw<D>(&self, target: &mut D, state: &State) -> Result<(), Infallible>
     where
         D: DrawTarget,
         D::Color: RgbColor,
@@ -111,14 +109,10 @@ impl Screen for ModeScreen {
 
         Ok(())
     }
-    fn update(
-        &mut self,
-        messages: Arc<SegQueue<ActionMessage>>,
-        time: f64,
-        delta: f64,
-    ) -> Option<Event> {
-        while !messages.is_empty() {
-            if let Some(action) = messages.pop() {
+
+    fn update(&mut self, state: &State, actions: Arc<SegQueue<ActionMessage>>) -> Option<Event> {
+        while !actions.is_empty() {
+            if let Some(action) = actions.pop() {
                 match action {
                     ActionMessage::X => return Some(Event::CloseModeMenu),
                     ActionMessage::Y => self.selected_mode = self.selected_mode.next(),

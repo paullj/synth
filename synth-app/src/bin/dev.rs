@@ -5,7 +5,7 @@ use embedded_graphics_simulator::{
 use midir::{os::unix::VirtualOutput, MidiOutput, MidiOutputConnection};
 use synth_app::app::App;
 use synth_app::midi::midi_to_bytes;
-use wmidi::{Channel, MidiMessage, Note, Velocity, U7};
+use wmidi::{Channel, ControlFunction, MidiMessage, Note, Velocity, U7};
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 160;
@@ -29,7 +29,6 @@ fn main() {
 
     // Create a shared display
     let mut display = SimulatorDisplay::<Rgb565>::new(Size::new(WIDTH, HEIGHT));
-    // let (tx, rx) = channel::bounded(0);
 
     let output_settings = OutputSettingsBuilder::new()
         .scale(SCALE)
@@ -42,7 +41,6 @@ fn main() {
 
     let mut app = App::new();
 
-    let start_time = std::time::Instant::now();
     'running: loop {
         let frame_start = std::time::Instant::now();
 
@@ -82,13 +80,9 @@ fn main() {
                 _ => {}
             }
         }
-        // display.clear(Rgb565::BLACK).unwrap();
-        // app.draw(&mut display);
-        let frame_end = std::time::Instant::now();
-        let delta = (frame_end - frame_start).as_secs_f64();
-        let elapsed = (frame_end - start_time).as_secs_f64();
-        app.update(elapsed, delta);
-        match app.draw(&mut display, elapsed, delta) {
+      
+        app.update();
+        match app.draw(&mut display) {
             Ok(_) => {}
             Err(err) => println!("Error drawing: {}", err),
         }
@@ -96,8 +90,6 @@ fn main() {
         window.update(&display);
     }
     midi_con.close();
-
-    // app.run();
 }
 
 fn start_midi_output() -> MidiOutputConnection {
@@ -107,7 +99,6 @@ fn start_midi_output() -> MidiOutputConnection {
             panic!("Failed to create MIDI output: {}", e);
         }
     };
-    // let out_port = get_first_midi_device(&mut midi_out).unwrap();
     let conn_out = match midi_out.create_virtual("Emulated MIDI Out") {
         Ok(conn_out) => conn_out,
         Err(e) => {
@@ -149,6 +140,59 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
                     Keycode::U => None,
                     Keycode::O => Some(MidiMessage::SysEx(U7::try_from_bytes(MENU).unwrap())),
                     Keycode::P => Some(MidiMessage::SysEx(U7::try_from_bytes(SELECT).unwrap())),
+                    // TODO: Probably will need to use a different MIDI message for these
+                    Keycode::Num1 => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num2 => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num3 => Some(MidiMessage::ControlChange(
+                        Channel::Ch2,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num4 => Some(MidiMessage::ControlChange(
+                        Channel::Ch2,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num5 => Some(MidiMessage::ControlChange(
+                        Channel::Ch3,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num6 => Some(MidiMessage::ControlChange(
+                        Channel::Ch3,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num7 => Some(MidiMessage::ControlChange(
+                        Channel::Ch4,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num8 => Some(MidiMessage::ControlChange(
+                        Channel::Ch4,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Num9 => None,
+                    Keycode::Num0 => None,
+                    Keycode::Minus => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_DECREMENT,
+                        U7::MAX,
+                    )),
+                    Keycode::Equals => Some(MidiMessage::ControlChange(
+                        Channel::Ch1,
+                        ControlFunction::DATA_INCREMENT,
+                        U7::MAX,
+                    )),
                     _ => None,
                 }
             } else {
@@ -159,31 +203,35 @@ fn keycode_to_midi<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<
 }
 
 trait KeycodeNote {
-    fn value(self) -> Option<Note>;
+    fn value(self, octave: u8) -> Option<Note>;
 }
 
 impl KeycodeNote for Keycode {
-    fn value(self) -> Option<Note> {
+    fn value(self, octave: u8) -> Option<Note> {
+        if octave > 10 {
+            return None;
+        }
+
         match self {
-            Keycode::Z => Some(Note::C4),
-            Keycode::S => Some(Note::Db4),
-            Keycode::X => Some(Note::D4),
-            Keycode::D => Some(Note::Eb4),
-            Keycode::C => Some(Note::E4),
-            Keycode::V => Some(Note::F4),
-            Keycode::G => Some(Note::Gb4),
-            Keycode::B => Some(Note::G4),
-            Keycode::H => Some(Note::Ab4),
-            Keycode::N => Some(Note::A4),
-            Keycode::J => Some(Note::Bb4),
-            Keycode::M => Some(Note::B4),
+            Keycode::Z => Some(Note::from_u8_lossy(0 + (octave * 12))),
+            Keycode::S => Some(Note::from_u8_lossy(1 + (octave * 12))),
+            Keycode::X => Some(Note::from_u8_lossy(2 + (octave * 12))),
+            Keycode::D => Some(Note::from_u8_lossy(3 + (octave * 12))),
+            Keycode::C => Some(Note::from_u8_lossy(4 + (octave * 12))),
+            Keycode::V => Some(Note::from_u8_lossy(5 + (octave * 12))),
+            Keycode::G => Some(Note::from_u8_lossy(6 + (octave * 12))),
+            Keycode::B => Some(Note::from_u8_lossy(7 + (octave * 12))),
+            Keycode::H => Some(Note::from_u8_lossy(8 + (octave * 12))),
+            Keycode::N => Some(Note::from_u8_lossy(9 + (octave * 12))),
+            Keycode::J => Some(Note::from_u8_lossy(10 + (octave * 12))),
+            Keycode::M => Some(Note::from_u8_lossy(11 + (octave * 12))),
             _ => None,
         }
     }
 }
 
 fn keycode_to_note<'a>(keycode: Keycode, press: KeyPress) -> Option<MidiMessage<'a>> {
-    let note = keycode.value();
+    let note = keycode.value(4);
     match note {
         Some(note) => match press {
             KeyPress::Down => Some(MidiMessage::NoteOn(Channel::Ch1, note, Velocity::MAX)),
