@@ -9,11 +9,11 @@ publish = false
 
 [dependencies]
 embedded-graphics = "0.8.1"
-cpal = "0.15.2"
-anyhow = "1.0.44"
+cpal = "0.15.3"
+anyhow = "1.0.86"
 crossbeam = "0.8.0"
-midir = "*"
-read_input = "*"
+midir = "0.10.0"
+read_input = "0.8.6"
 wmidi = "4.0.10"
 easer = "0.3.0"
 
@@ -30,5 +30,10 @@ embedded-graphics-simulator = "0.6.0"
 
 [[bin]]
 name = "dev"
+test = false
+bench = false
+
+[[bin]]
+name = "minimal"
 test = false
 bench = false

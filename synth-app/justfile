@@ -1,2 +1,32 @@
-test:
-  @echo "test"
+set dotenv-path := "../.env"
+
+_default:
+  @just --list
+
+# Copy the SSH key to the device, so we can ssh into it without a password
+[group("setup")]
+copy-ssh-key:
+  ssh-copy-id $DEVICE_USER@$DEVICE_HOST
+
+# Runs a dev binary in release mode
+[group('local')]
+dev name="dev":
+  @cargo run --bin {{name}} --release
+
+# Build binary for device
+[group('remote')]
+build name="minimal":
+  @cross build --bin {{name}} --release --target $DEVICE_TARGET
+
+# Deploy a binary to the device
+[group('remote')]
+deploy name="minimal":
+  scp target/$DEVICE_TARGET/release/{{name}} $DEVICE_USER@$DEVICE_HOST:$DEVICE_APP_PATH
+  @echo "✅ Deployed to $DEVICE_HOST at $DEVICE_APP_PATH...\n"
+
+# Build the binary, copy it to the remote device, and run it
+[group('remote')]
+run name="minimal":
+  @just cross-build {{name}}
+  @just deploy {{name}}
+  @ssh $DEVICE_USER@$DEVICE_HOST "chmod +x $DEVICE_APP_PATH && $DEVICE_APP_PATH"

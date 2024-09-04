@@ -8,7 +8,7 @@ use synth_app::midi::midi_to_bytes;
 use wmidi::{Channel, ControlFunction, MidiMessage, Note, Velocity, U7};
 
 const WIDTH: u32 = 320;
-const HEIGHT: u32 = 160;
+const HEIGHT: u32 = 240;
 const SCALE: u32 = 2;
 const MAX_FPS: u32 = 60;
 
@@ -80,7 +80,7 @@ fn main() {
                 _ => {}
             }
         }
-      
+
         app.update();
         match app.draw(&mut display) {
             Ok(_) => {}
