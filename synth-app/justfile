@@ -8,25 +8,36 @@ _default:
 copy-ssh-key:
   ssh-copy-id $DEVICE_USER@$DEVICE_HOST
 
+# Generate a systemd service file for the app, and add it to the device
+[group('setup')]
+setup-service:
+  ./scripts/generate_service.sh "./services/app.service.template" $DEVICE_USER $DEVICE_APP_DIR/$DEVICE_APP_NAME "./services/app.service"
+  ./scripts/add_service.sh $DEVICE_USER $DEVICE_HOST $DEVICE_APP_NAME "services/app.service" $DEVICE_APP_DIR
+
 # Runs a dev binary in release mode
 [group('local')]
-dev name="dev":
-  @cargo run --bin {{name}} --release
+dev:
+  @cargo run --bin local --release --features local
 
 # Build binary for device
-[group('remote')]
-build name="minimal":
-  @cross build --bin {{name}} --release --target $DEVICE_TARGET
+[group('raspberry_pi')]
+build:
+  @cross build --bin raspberry_pi --release --target $DEVICE_TARGET --features raspberry_pi
 
 # Deploy a binary to the device
-[group('remote')]
-deploy name="minimal":
-  scp target/$DEVICE_TARGET/release/{{name}} $DEVICE_USER@$DEVICE_HOST:$DEVICE_APP_PATH
-  @echo "✅ Deployed to $DEVICE_HOST at $DEVICE_APP_PATH...\n"
+[group('raspberry_pi')]
+deploy:
+  scp target/$DEVICE_TARGET/release/raspberry_pi $DEVICE_USER@$DEVICE_HOST:$DEVICE_APP_DIR/$DEVICE_APP_NAME
+  @echo "✅ Deployed to $DEVICE_HOST at $DEVICE_APP_DIR/$DEVICE_APP_NAME...\n"
 
 # Build the binary, copy it to the remote device, and run it
-[group('remote')]
-run name="minimal":
-  @just cross-build {{name}}
-  @just deploy {{name}}
-  @ssh $DEVICE_USER@$DEVICE_HOST "chmod +x $DEVICE_APP_PATH && $DEVICE_APP_PATH"
+[group('raspberry_pi')]
+run:
+  @just build
+  -@just kill
+  @just deploy
+  @ssh $DEVICE_USER@$DEVICE_HOST "chmod +x $DEVICE_APP_DIR/$DEVICE_APP_NAME && $DEVICE_APP_DIR/$DEVICE_APP_NAME"
+
+[group('device')]
+kill:
+  @ssh $DEVICE_USER@$DEVICE_HOST "killall $DEVICE_APP_NAME"

@@ -1,5 +1,5 @@
 pub mod app;
-mod input;
-pub mod midi;
-mod output;
-mod state;
+
+// Only compile this module on the Raspberry Pi
+#[cfg(feature = "raspberry_pi")]
+pub mod spi;

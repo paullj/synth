@@ -8,7 +8,6 @@ publish = false
 
 
 [dependencies]
-embedded-graphics = "0.8.1"
 cpal = "0.15.3"
 anyhow = "1.0.86"
 crossbeam = "0.8.0"
@@ -16,24 +15,46 @@ midir = "0.10.0"
 read_input = "0.8.6"
 wmidi = "4.0.10"
 easer = "0.3.0"
+fundsp = { version = "0.16.0", default-features = false }
+embedded-graphics = "0.8.1"                                          # Graphics library for embedded systems
+rppal = { version = "0.19.0", features = ["hal"], optional = true }
+ili9341 = { version = "0.6.0", optional = true }                     # Driver for LCD controlled by ILI9341
+embedded-hal = { version = "1.0.0", optional = true }                # Hardware Abstraction Layer for embedded systems
+display-interface-spi = { version = "0.5.0", optional = true }       # Generic SPI implementation of a data/command interface for SPI driver displays
+embedded-graphics-simulator = { version = "0.6.0", optional = true } # Simulator for embedded-graphics
+signal-hook = "0.3.8"
+log = "0.4.22"
 
-[dependencies.fundsp]
-version = "0.16.0"
-default-features = false
+[features]
+raspberry_pi = ["rppal", "ili9341", "embedded-hal", "display-interface-spi"]
+local = ["embedded-graphics-simulator"]
 
 # Dependencies for Raspberry Pi target
-[target.'cfg(target = "armv7-unknown-linux-gnueabihf")'.dependencies]
+[target.'cfg(target = "aarch64-unknown-linux-gnu")'.dependencies]
 
 # Dependencies for other targets
-[target.'cfg(not(target = "armv7-unknown-linux-gnueabihf"))'.dependencies]
-embedded-graphics-simulator = "0.6.0"
+[target.'cfg(not(target = "aarch64-unknown-linux-gnu"))'.dependencies]
 
 [[bin]]
-name = "dev"
+# This is the main binary that runs on the Pi
+name = "raspberry_pi"
+path = "src/bin/raspberry_pi.rs"
+required-features = ["raspberry_pi"]
 test = false
 bench = false
 
 [[bin]]
-name = "minimal"
+# This is a binary that simulates the device on the local machine
+name = "local"
+path = "src/bin/local.rs"
+required-features = ["local"]
+test = false
+bench = false
+
+[[bin]]
+# This is a binary that simulates the device on the local machine
+name = "local2"
+path = "src/bin/local2.rs"
+required-features = ["local"]
 test = false
 bench = false
