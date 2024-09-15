@@ -1,5 +1,5 @@
 [toolchain]
 # Keep this in sync with the embassy crate
-channel = "nightly-2023-12-20"
-components = ["llvm-tools"]
+channel = "nightly-2024-09-06"
+components = ["rust-src", "rustfmt", "llvm-tools", "miri"]
 targets = ["thumbv6m-none-eabi"]
