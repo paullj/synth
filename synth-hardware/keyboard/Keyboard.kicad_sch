@@ -15415,7 +15415,7 @@
 				)
 			)
 		)
-		(property "Value" "Fuse_Small"
+		(property "Value" "6V 1.5A"
 			(at 182.9306 227.2001 0)
 			(effects
 				(font
@@ -15450,7 +15450,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "??"
+		(property "LCSC" "C2838983"
 			(at 182.9306 229.7401 0)
 			(effects
 				(font
@@ -23833,7 +23833,7 @@
 				)
 			)
 		)
-		(property "Value" "XC6206PxxxMR"
+		(property "Value" "XC6206P332MR"
 			(at 231.14 222.25 0)
 			(effects
 				(font
@@ -23841,7 +23841,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-3"
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
 			(at 231.14 220.345 0)
 			(effects
 				(font
@@ -23869,7 +23869,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "??"
+		(property "LCSC" "C5148692"
 			(at 231.14 226.06 0)
 			(effects
 				(font
