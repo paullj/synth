@@ -1,0 +1,33 @@
+name: Hardware Actions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "synth-hardware/**"
+      - ".github/workflows/synth-hardware.yml"
+  pull_request:
+    paths:
+      - "synth-hardware/**"
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: INTI-CMNB/KiBot@v2_k8
+        with:
+          # Required - kibot config file
+          config: config.kibot.yaml
+          # optional - prefix to output defined in config
+          dir: output
+          # optional - schematic file
+          schema: "Keyboard.kicad_sch"
+          # optional - PCB design file
+          board: "Keyboard.kicad_pcb"
+      - name: upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: output
+          path: output
