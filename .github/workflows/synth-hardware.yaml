@@ -11,21 +11,25 @@ on:
       - "synth-hardware/**"
 
 jobs:
-  example:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - uses: INTI-CMNB/KiBot@v2_k8
+      - uses: inti-cmnb/kibot@v2_k8
         with:
-          # Required - kibot config file
-          config: "synth-hardware/keyboard/config.kibot.yaml"
-          # optional - prefix to output defined in config
-          dir: output
-          # optional - schematic file
-          schema: "synth-hardware/keyboard/Keyboard.kicad_sch"
-          # optional - PCB design file
+          config: "synth-hardware/keyboard/test.kibot.yaml"
           board: "synth-hardware/keyboard/Keyboard.kicad_pcb"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: inti-cmnb/kibot@v2_k8
+        with:
+          config: "synth-hardware/keyboard/config.kibot.yaml"
+          schema: "synth-hardware/keyboard/Keyboard.kicad_sch"
+          board: "synth-hardware/keyboard/Keyboard.kicad_pcb"
+          dir: output
       - name: upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
