@@ -15,16 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: INTI-CMNB/KiBot@v2_k8
         with:
           # Required - kibot config file
-          config: config.kibot.yaml
+          config: "synth-hardware/keyboard/config.kibot.yaml"
           # optional - prefix to output defined in config
           dir: output
           # optional - schematic file
-          schema: "Keyboard.kicad_sch"
+          schema: "synth-hardware/keyboard/Keyboard.kicad_sch"
           # optional - PCB design file
-          board: "Keyboard.kicad_pcb"
+          board: "synth-hardware/keyboard/Keyboard.kicad_pcb"
       - name: upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
