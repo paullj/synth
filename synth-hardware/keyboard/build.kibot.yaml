@@ -123,4 +123,4 @@ outputs:
       csv:
         hide_pcb_info: true
         hide_stats_info: true
-        quote_all: true*
+        quote_all: true
