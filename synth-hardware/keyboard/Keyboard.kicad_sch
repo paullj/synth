@@ -7,6 +7,8 @@
 	(title_block
 		(title "Analog MIDI Keyboard")
 		(date "2024-10-21")
+		(rev "A")
+		(company "Paul Lavender-Jones")
 	)
 	(lib_symbols
 		(symbol "+1V1_1"
@@ -7970,7 +7972,7 @@
 		)
 		(uuid f67c2e4a-3210-4f7d-b36a-b3f1eb1fce23)
 	)
-	(text "ESD Protection"
+	(text "Debug Header"
 		(exclude_from_sim no)
 		(at 282.956 208.788 0)
 		(effects
