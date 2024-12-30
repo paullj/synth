@@ -57,7 +57,6 @@ async fn main(_spawner: Spawner) {
     let mut builder = Builder::new(
         driver,
         config,
-        &mut device_descriptor,
         &mut config_descriptor,
         &mut bos_descriptor,
         &mut [], // no msos descriptors
@@ -78,8 +77,8 @@ async fn main(_spawner: Spawner) {
 
     // Use the Midi class!
     let midi_fut = async {
+        class.wait_connection().await;
         loop {
-            class.wait_connection().await;
             defmt::info!("Connected");
             let _ = midi_echo(&mut class, &mut led).await;
             defmt::info!("Disconnected");
@@ -123,7 +122,7 @@ fn handle_midi_message(bytes: &[u8]) -> Result<MidiMessage, wmidi::FromBytesErro
 
 async fn midi_echo<'d, T: Instance + 'd>(
     class: &mut MidiClass<'d, Driver<'d, T>>,
-    led: &mut Output<'_, embassy_rp::peripherals::PIN_25>,
+    led: &mut Output<'_>,
 ) -> Result<(), Disconnected> {
     loop {
         led.set_high();

@@ -3,15 +3,6 @@
 version = 3
 
 [[package]]
-name = "adafruit-seesaw"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9cf771c4e54df8e3b870a55e9d8440928a14f29cee9b81d9f18b747fe75df07"
-dependencies = [
- "embedded-hal 1.0.0",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -33,6 +24,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "analog-multiplexer"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f19df84295ef9157f4c03dab16fef62eae96a9facfc69f5fcd5fc981de4d4659"
+dependencies = [
+ "embedded-hal 0.2.7",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -46,6 +46,12 @@ checksum = "8824ecca2e851cec16968d54a01dd372ef8f95b244fb84b84e70128be347c3c6"
 dependencies = [
  "term",
 ]
+
+[[package]]
+name = "assign-resources"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c0fc5119624f5c171d084b6a1bd3b6447dfadab980bb0d84717906239b77f85"
 
 [[package]]
 name = "atomic-polyfill"
@@ -371,6 +377,9 @@ name = "embassy-futures"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f878075b9794c1e4ac788c95b728f26aa6366d32eeb10c7051389f898f7d067"
+dependencies = [
+ "defmt",
+]
 
 [[package]]
 name = "embassy-hal-internal"
@@ -1275,18 +1284,21 @@ dependencies = [
 name = "synth-firmware"
 version = "0.1.0"
 dependencies = [
- "adafruit-seesaw",
+ "analog-multiplexer",
+ "assign-resources",
  "cortex-m",
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
  "embassy-executor",
+ "embassy-futures",
  "embassy-rp",
  "embassy-sync",
  "embassy-time",
  "embassy-usb",
  "embedded-hal 1.0.0",
  "panic-probe",
+ "wmidi",
 ]
 
 [[package]]
@@ -1595,6 +1607,12 @@ name = "windows_x86_64_msvc"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dff9641d1cd4be8d1a070daf9e3773c5f67e78b4d9d42263020c057706765c04"
+
+[[package]]
+name = "wmidi"
+version = "4.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e55f35b40ad0178422d06e9ba845041baf2faf04627b91fde928d0f6a21c712"
 
 [[package]]
 name = "zerocopy"
