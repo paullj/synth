@@ -1,5 +1,9 @@
-# Subcommands for synth_app 
+# app sub commands
 mod app 'synth-app/justfile'
+# hardware sub commands
+mod hardware 'synth-hardware/justfile'
+# firmware sub commands
+mod firmware 'synth-firmware/justfile'
 
 set dotenv-load
 

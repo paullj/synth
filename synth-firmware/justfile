@@ -1,0 +1,4 @@
+set dotenv-path := "../.env"
+
+_default:
+  @just --list
