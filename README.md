@@ -6,6 +6,8 @@
 
 This repo is a monorepo composed of multiple projects that are used to make a synthesizer. The aim of the project is to learn embedded, lower level programming with Rust, and electronic engineering. It is very much a work in progress, I have no idea what I'm doing.
 
+I am going to start with just a simple MIDI controller and see how that goes first. Eventually I would like to make a full groove box with a sequencer and a bunch of other stuff but that is a long way off.
+
 - [`synth-firmware`](https://github.com/paullj/synth/blob/main/synth-firmware/README.md): Firmware for custom board that sends MIDI messages over USB
 - [`synth-hardware`](https://github.com/paullj/synth/blob/main/synth-hardware/README.md): Hardware design files for the MIDI keyboard
 
