@@ -22,4 +22,16 @@ impl State {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn octave_up(&mut self) {
+        if self.octave < 8 {
+            self.octave += 1;
+        }
+    }
+
+    pub fn octave_down(&mut self) {
+        if self.octave > 1 {
+            self.octave -= 1;
+        }
+    }
 }

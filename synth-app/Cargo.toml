@@ -9,7 +9,7 @@ publish = false
 
 [dependencies]
 cpal = "0.15.3"
-anyhow = "1.0.86"
+anyhow = "1.0.89"
 crossbeam = "0.8.0"
 midir = "0.10.0"
 read_input = "0.8.6"
@@ -24,16 +24,15 @@ display-interface-spi = { version = "0.5.0", optional = true }       # Generic S
 embedded-graphics-simulator = { version = "0.6.0", optional = true } # Simulator for embedded-graphics
 signal-hook = "0.3.8"
 log = "0.4.22"
+midi-control = "0.2.2"
+env_logger = "0.11.5"
+adafruit-seesaw = { version = "0.6.1", features = ["std"] }
+embedded-fps = { version = "0.1.0", features = ["std"] }
+crossbeam-queue = "0.3.11"
 
 [features]
 raspberry_pi = ["rppal", "ili9341", "embedded-hal", "display-interface-spi"]
 local = ["embedded-graphics-simulator"]
-
-# Dependencies for Raspberry Pi target
-[target.'cfg(target = "aarch64-unknown-linux-gnu")'.dependencies]
-
-# Dependencies for other targets
-[target.'cfg(not(target = "aarch64-unknown-linux-gnu"))'.dependencies]
 
 [[bin]]
 # This is the main binary that runs on the Pi
@@ -47,14 +46,6 @@ bench = false
 # This is a binary that simulates the device on the local machine
 name = "local"
 path = "src/bin/local.rs"
-required-features = ["local"]
-test = false
-bench = false
-
-[[bin]]
-# This is a binary that simulates the device on the local machine
-name = "local2"
-path = "src/bin/local2.rs"
 required-features = ["local"]
 test = false
 bench = false

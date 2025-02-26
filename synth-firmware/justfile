@@ -2,3 +2,9 @@ set dotenv-path := "../.env"
 
 _default:
   @just --list
+
+build:
+  @cargo build --release
+
+flash: build
+  @elf2uf2-rs target/thumbv6m-none-eabi/release/main -d

@@ -45,7 +45,7 @@ bind_interrupts!(struct Irqs {
 });
 
 const MAX_PACKET_SIZE: usize = 64;
-const DEBOUNCE_THRESHOLD: u16 = 50;
+const DEBOUNCE_THRESHOLD: u16 = 25;
 
 enum Events {
     KeyPressed(KeyCode, u8),
@@ -106,9 +106,16 @@ async fn scan(_s: Spawner, r: ScanResources) -> () {
                     if previous > next {
                         if !state.notes_on[key.code as usize] {
                             state.notes_on[key.code as usize] = true;
-                            EVENT_CHANNEL
-                                .send(Events::KeyPressed(key.code, velocity))
-                                .await;
+                            match key.code {
+                                KeyCode::SHIFT => (),
+                                KeyCode::UP => state.octave_up(),
+                                KeyCode::DOWN => state.octave_down(),
+                                _ => {
+                                    EVENT_CHANNEL
+                                        .send(Events::KeyPressed(key.code, velocity))
+                                        .await;
+                                }
+                            }
                         }
                     } else {
                         if state.notes_on[key.code as usize] {

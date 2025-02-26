@@ -5,7 +5,6 @@
 - [x] Systemd service for the app
 - [ ] Get the app to read midi input (might need an adapter for usb input)
 - [ ] Output sound from the pi to usb audio interface
-- [ ] Get raspberry pi to boot up and run the UI
 
 ### App
 
